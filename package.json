@@ -1,0 +1,26 @@
+{
+  "name": "node-res",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test --bail",
+    "coverage": "istanbul cover _mocha test --bail"
+  },
+  "author": "amanvirk",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^3.3.0",
+    "co-mocha": "^1.1.2",
+    "co-supertest": "0.0.10",
+    "istanbul": "^0.3.22",
+    "mocha": "^2.3.3",
+    "supertest": "^1.1.0"
+  },
+  "dependencies": {
+    "content-disposition": "^0.5.0",
+    "etag": "^1.7.0",
+    "mime": "^1.3.4",
+    "vary": "^1.1.0"
+  }
+}
