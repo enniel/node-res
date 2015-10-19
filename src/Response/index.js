@@ -10,7 +10,7 @@ const mime               = require('mime')
 const etag               = require('etag')
 const fs                 = require('fs')
 const contentDisposition = require('content-disposition')
-const vary = require('vary')
+const vary               = require('vary')
 
 /**
  * @description Utility class that makes eaiser to
