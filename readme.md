@@ -2,6 +2,9 @@
 
 ![](http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png)
 
+![](https://img.shields.io/travis/poppinss/node-res.svg)
+[![Coverage Status](https://coveralls.io/repos/poppinss/node-res/badge.svg?branch=master&service=github)](https://coveralls.io/github/poppinss/node-res?branch=master)
+
 `node-res` exposes helper methods to constructor different http response. It supports almost every method from `express` but is just an I/O module.
 
 
