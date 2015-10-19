@@ -6,7 +6,7 @@
  * MIT Licensed
 */
 
-const Response = require('../src/Response')
+const Response = require('../')
 const supertest  = require('co-supertest')
 const http       = require('http')
 const chai = require('chai')
