@@ -62,23 +62,23 @@ nodeRes.getHeader(res, 'Content-type')
 nodeRes.status(res, 200)
 ```
 
-#### send(res, body)
+#### send(req, res, body)
 
 ```javascript
-nodeRes.send(res, {user:"someone"})
+nodeRes.send(req, res, {user:"someone"})
 ```
 
-#### json (res, body)
+#### json (req, res, body)
 `send` method is fully capable of making json responses, it is an alias method for readability.
 
 ```javascript
-nodeRes.json(res, {user:"someone"})
+nodeRes.json(req, res, {user:"someone"})
 ```
 
-#### jsonp (res, body, callback="callback")
+#### jsonp (req, res, body, callback="callback")
 
 ```javascript
-nodeRes.jsonp(res, {user:"someone"}, "angular")
+nodeRes.jsonp(req, res, {user:"someone"}, "angular")
 ```
 
 #### download (res, filePath)
@@ -105,7 +105,7 @@ sets location header on request
 nodeRes.location(res, 'http://example.org')
 ```
 
-#### redirect (res, url, status=302?)
+#### redirect (req, res, url, status=302?)
 
 redirects to given url after setting location header
 
