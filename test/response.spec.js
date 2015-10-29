@@ -53,7 +53,7 @@ describe('Response', function () {
 
   it('should send text back to client with proper headers', function * () {
     const server = http.createServer(function (req,res) {
-      Response.send(res,'hello world')
+      Response.send(req, res,'hello world')
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal('hello world')
@@ -62,7 +62,7 @@ describe('Response', function () {
 
   it('should send number back to client with proper headers', function * () {
     const server = http.createServer(function (req,res) {
-      Response.send(res,1)
+      Response.send(req, res,1)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal('1')
@@ -76,7 +76,7 @@ describe('Response', function () {
       nested: ['foo','bar']
     }
     const server = http.createServer(function (req,res) {
-      Response.send(res,body)
+      Response.send(req, res,body)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.body).deep.equal(body)
@@ -86,7 +86,7 @@ describe('Response', function () {
   it('should send empty response', function * () {
     const body = ''
     const server = http.createServer(function (req,res) {
-      Response.send(res,body)
+      Response.send(req, res,body)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal('')
@@ -96,7 +96,7 @@ describe('Response', function () {
   it('should send empty response when request body is null', function * () {
     const body = null
     const server = http.createServer(function (req,res) {
-      Response.send(res,body)
+      Response.send(req, res,body)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal('')
@@ -106,7 +106,7 @@ describe('Response', function () {
   it('should send boolean as response', function * () {
     const body = true
     const server = http.createServer(function (req,res) {
-      Response.send(res,body)
+      Response.send(req, res,body)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal('true')
@@ -116,18 +116,29 @@ describe('Response', function () {
   it('should send buffer as response', function * () {
     const body = new Buffer('hello world', 'utf8')
     const server = http.createServer(function (req,res) {
-      Response.send(res,body)
+      Response.send(req, res,body)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal('hello world')
     expect(res.headers['content-type']).to.equal('application/octet-stream')
   })
 
+  it('should send empty body for HEAD request', function * () {
+    const body = new Buffer('hello world', 'utf8')
+    const server = http.createServer(function (req,res) {
+      Response.send(req, res,body)
+    })
+    const res = yield supertest(server).head('/').expect(200)
+    expect(res.headers['content-type']).to.equal('application/octet-stream')
+    expect(res.text).to.equal('')
+  })
+
+
   it('should not override existing status by calling send method', function * () {
     const body = true
     const server = http.createServer(function (req,res) {
       Response.status(res, 204)
-      Response.send(res, body)
+      Response.send(req, res, body)
     })
     const res = yield supertest(server).get('/').expect(204)
   })
@@ -138,7 +149,7 @@ describe('Response', function () {
       baz: ['foo','bar']
     }
     const server = http.createServer(function (req,res) {
-      Response.json(res, body)
+      Response.json(req, res, body)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.body).deep.equal(body)
@@ -152,7 +163,7 @@ describe('Response', function () {
     }
     const response = '/**/ typeof callback === \'function\' && callback('+JSON.stringify(body)+');'
     const server = http.createServer(function (req,res) {
-      Response.jsonp(res,body)
+      Response.jsonp(req, res,body)
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal(response)
@@ -168,7 +179,7 @@ describe('Response', function () {
     }
     const response = '/**/ typeof foo === \'function\' && foo('+JSON.stringify(body)+');'
     const server = http.createServer(function (req,res) {
-      Response.jsonp(res,body,'foo')
+      Response.jsonp(req, res,body,'foo')
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal(response)
@@ -180,7 +191,7 @@ describe('Response', function () {
     const body = 'hello world'
     const server = http.createServer(function (req,res) {
       Response.status(res,204)
-      Response.send(res,body)
+      Response.send(req, res,body)
     })
     const res = yield supertest(server).get('/').expect(204)
     expect(res.headers['content-type']).to.equal(undefined)
@@ -220,7 +231,7 @@ describe('Response', function () {
   it('should set location header on response', function * () {
     const server = http.createServer(function (req,res) {
       Response.location(res, 'http://localhost')
-      Response.send(res, '')
+      Response.send(req, res, '')
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.headers['location']).to.equal('http://localhost')
@@ -228,7 +239,7 @@ describe('Response', function () {
 
   it('should redirect to a given url', function * () {
     const server = http.createServer(function (req,res) {
-      Response.redirect(res, 'http://localhost',301)
+      Response.redirect(req, res, 'http://localhost',301)
     })
     const res = yield supertest(server).get('/').expect(301)
     expect(res.headers['location']).to.equal('http://localhost')
@@ -237,7 +248,7 @@ describe('Response', function () {
 
   it('should redirect with 302 when status is not defined', function * () {
     const server = http.createServer(function (req,res) {
-      Response.redirect(res, 'http://localhost')
+      Response.redirect(req, res, 'http://localhost')
     })
     const res = yield supertest(server).get('/').expect(302)
     expect(res.headers['location']).to.equal('http://localhost')
@@ -247,7 +258,7 @@ describe('Response', function () {
   it('should add vary header', function * () {
     const server = http.createServer(function (req,res) {
       Response.vary(res, 'Origin')
-      Response.send(res, '')
+      Response.send(req, res, '')
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.headers['vary']).to.equal('Origin')

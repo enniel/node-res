@@ -112,11 +112,12 @@ Response.end = function (res) {
  * @description sends request body by writing
  * it on http response object.
  * @method send
+ * @param  {Object} req
  * @param  {Object} res
  * @param  {Mixed} body
  * @return {void}
  */
-Response.send = function (res, body) {
+Response.send = function (req, res, body) {
 
   let chunk = body || ''
   let type,contentType
@@ -177,7 +178,9 @@ Response.send = function (res, body) {
     Response.removeHeader(res, 'Transfer-Encoding')
   }
 
-  Response.write(res, chunk)
+  if(req.method !== 'HEAD'){
+    Response.write(res, chunk)
+  }
   Response.end(res)
 }
 
@@ -189,9 +192,9 @@ Response.send = function (res, body) {
  * @param  {Mixed} body
  * @return {void}
  */
-Response.json = function (res, body) {
+Response.json = function (req, res, body) {
   Response.safeHeader(res, 'Content-Type','application/json')
-  Response.send(res, body)
+  Response.send(req, res, body)
 }
 
 /**
@@ -203,7 +206,7 @@ Response.json = function (res, body) {
  * @param  {Function} callback
  * @return {void}
  */
-Response.jsonp = function (res, body, callback) {
+Response.jsonp = function (req, res, body, callback) {
 
   callback = callback || 'callback'
 
@@ -226,7 +229,7 @@ Response.jsonp = function (res, body, callback) {
    */
   body = '/**/ typeof ' + callback + ' === \'function\' && ' + callback + '(' + body + ');'
 
-  Response.send(res, body)
+  Response.send(req, res, body)
 }
 
 /**
@@ -248,7 +251,7 @@ Response._sendFile = function (res, filePath) {
    */
   function onError (errorStack) {
     Response.status(res, 503)
-    Response.send(res, errorStack)
+    Response.send({}, res, errorStack)
     Response.end(res)
   }
 
@@ -330,18 +333,19 @@ Response.location = function (res, url) {
  * @description redirects to a given url by setting
  * up location header
  * @method redirect
+ * @param  {Object} req
  * @param  {Object} res
  * @param  {String} url
  * @param  {Number} status
  * @return {void}
  */
-Response.redirect = function (res, url, status) {
+Response.redirect = function (req, res, url, status) {
   status = status || 302
   const body = ''
   Response.status(res, status)
   Response.location(res, url)
   Response.header(res, 'Content-Length', Buffer.byteLength(body))
-  Response.send(res, body)
+  Response.send(req, res, body)
 }
 
 /**
