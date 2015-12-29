@@ -6,11 +6,11 @@
  * MIT Licensed
 */
 
-const mime               = require('mime')
-const etag               = require('etag')
-const fs                 = require('fs')
+const mime = require('mime')
+const etag = require('etag')
+const fs = require('fs')
 const contentDisposition = require('content-disposition')
-const vary               = require('vary')
+const vary = require('vary')
 
 /**
  * @description Utility class that makes eaiser to
@@ -43,9 +43,9 @@ Response.header = function (res, key, value) {
    * @example
    *   text/plain will become text/plain; charset=utf-8
    */
-  if(key.toLowerCase() === 'content-type' && !charsetRegExp.test(value)){
+  if (key.toLowerCase() === 'content-type' && !charsetRegExp.test(value)) {
     const charset = mime.charsets.lookup(value.split(';')[0])
-    if(charset){
+    if (charset) {
       value += '; charset=' + charset.toLowerCase()
     }
   }
@@ -70,8 +70,8 @@ Response.status = function (res, code) {
  * @see  Response.header
  */
 Response.safeHeader = function (res, key, value) {
-  if(!res.getHeader(key)){
-    Response.header(res,key, value)
+  if (!res.getHeader(key)) {
+    Response.header(res, key, value)
   }
 }
 
@@ -118,31 +118,30 @@ Response.end = function (res) {
  * @return {void}
  */
 Response.send = function (req, res, body) {
-
   let chunk = body || ''
-  let type,contentType
+  let type, contentType
 
   /**
    * switching over data type and formatting data
    * to be sent on http response.
    */
-  switch(typeof chunk){
+  switch (typeof chunk) {
     case 'string':
       type = 'html'
-      break;
+      break
     case 'boolean':
     case 'number':
       type = 'text'
       chunk = String(chunk)
-      break;
+      break
     case 'object':
-      if(Buffer.isBuffer(chunk)){
+      if (Buffer.isBuffer(chunk)) {
         type = 'bin'
-      }else{
+      } else {
         type = 'json'
         chunk = JSON.stringify(chunk)
       }
-      break;
+      break
   }
 
   contentType = mime.lookup(type)
@@ -155,12 +154,12 @@ Response.send = function (req, res, body) {
   /**
    * setting up content length on response headers
    */
-  if(chunk){
+  if (chunk) {
     if (!Buffer.isBuffer(chunk)) {
-      chunk = new Buffer(chunk);
+      chunk = new Buffer(chunk)
     }
-    const length = chunk.length;
-    Response.header(res, 'Content-Length', length);
+    const length = chunk.length
+    Response.header(res, 'Content-Length', length)
   }
 
   /**
@@ -172,13 +171,13 @@ Response.send = function (req, res, body) {
    * removing unneccessary headers if response
    * has certain statusCode
    */
-  if(res.statusCode === 204 || res.statusCode === 304){
+  if (res.statusCode === 204 || res.statusCode === 304) {
     Response.removeHeader(res, 'Content-Type')
     Response.removeHeader(res, 'Content-Length')
     Response.removeHeader(res, 'Transfer-Encoding')
   }
 
-  if(req.method !== 'HEAD'){
+  if (req.method !== 'HEAD') {
     Response.write(res, chunk)
   }
   Response.end(res)
@@ -193,7 +192,7 @@ Response.send = function (req, res, body) {
  * @return {void}
  */
 Response.json = function (req, res, body) {
-  Response.safeHeader(res, 'Content-Type','application/json')
+  Response.safeHeader(res, 'Content-Type', 'application/json')
   Response.send(req, res, body)
 }
 
@@ -207,10 +206,9 @@ Response.json = function (req, res, body) {
  * @return {void}
  */
 Response.jsonp = function (req, res, body, callback) {
-
   callback = callback || 'callback'
 
-  Response.header(res ,'X-Content-Type-Options', 'nosniff')
+  Response.header(res, 'X-Content-Type-Options', 'nosniff')
   Response.safeHeader(res, 'Content-Type', 'text/javascript')
 
   body = JSON.stringify(body)
@@ -219,15 +217,15 @@ Response.jsonp = function (req, res, body, callback) {
    * replacing non-allowed javascript characters from body
    */
   body = body
-  .replace(/\u2028/g, '\\u2028')
-  .replace(/\u2029/g, '\\u2029')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
 
   /**
    * setting up callback on response body , typeof will make
    * sure not to throw error of client if callback is not
    * a function
    */
-  body = '/**/ typeof ' + callback + ' === \'function\' && ' + callback + '(' + body + ');'
+  body = '/**/ typeof ' + callback + " === 'function' && " + callback + '(' + body + ');'
 
   Response.send(req, res, body)
 }
@@ -255,7 +253,7 @@ Response._sendFile = function (res, filePath) {
     Response.end(res)
   }
 
-  function onEnd() {
+  function onEnd () {
     res.end()
   }
 
@@ -273,13 +271,13 @@ Response._sendFile = function (res, filePath) {
   function createStream () {
     readStream = fs.createReadStream(filePath)
     readStream.on('readable', onceReadable)
-    readStream.on('end',onEnd)
+    readStream.on('end', onEnd)
     readStream.on('error', onError)
   }
 
-  fs.stat (filePath, function (err, stats) {
-    if(err){
-      return onError (err)
+  fs.stat(filePath, function (err, stats) {
+    if (err) {
+      return onError(err)
     }
     Response.header(res, 'Last-Modified', stats.mtime)
     Response.header(res, 'Content-Length', stats.size)
@@ -295,7 +293,7 @@ Response._sendFile = function (res, filePath) {
  * @return {void}
  */
 Response.download = function (res, filePath) {
-  Response._sendFile (res, filePath)
+  Response._sendFile(res, filePath)
 }
 
 /**
@@ -313,7 +311,7 @@ Response.attachment = function (res, filePath, name, disposition) {
   disposition = disposition || 'attachment'
 
   Response.header(
-    res, 'Content-Disposition', contentDisposition(name, {type:disposition})
+    res, 'Content-Disposition', contentDisposition(name, {type: disposition})
   )
   Response._sendFile(res, filePath)
 }
