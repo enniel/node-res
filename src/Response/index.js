@@ -11,6 +11,7 @@ const etag = require('etag')
 const fs = require('fs')
 const contentDisposition = require('content-disposition')
 const vary = require('vary')
+const methods = require('./methods')
 
 /**
  * @description Utility class that makes eaiser to
@@ -19,6 +20,17 @@ const vary = require('vary')
  * @type {Object}
  */
 let Response = exports = module.exports = {}
+
+const methodNames = Object.keys(methods)
+methodNames.forEach(function (method) {
+  const methodName = method.toLowerCase().replace(/_\w/g, function (index, match) {
+    return index.replace('_', '').toUpperCase()
+  })
+  Response[methodName] = function (req, res, body) {
+    Response.status(res, methods[method])
+    Response.send(req, res, body)
+  }
+})
 
 /**
  * @description sets response header on http response

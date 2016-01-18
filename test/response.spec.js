@@ -12,11 +12,30 @@ const supertest = require('co-supertest')
 const http = require('http')
 const chai = require('chai')
 const path = require('path')
+const methods = require('../src/Response/methods')
 const expect = chai.expect
 
 require('co-mocha')
 
 describe('Response', function () {
+  it('should set dynamic method on response object which auto set statues', function * () {
+    const server = http.createServer(function (req, res) {
+      Response.tooManyRequests(req, res, 'Please wait')
+    })
+    const response = yield supertest(server).get('/').expect(429)
+    expect(response.text).to.equal('Please wait')
+  })
+
+  it('should have all descriptive methods on response status, point to right status', function () {
+    const methodNames = Object.keys(methods)
+    methodNames.forEach(function (method) {
+      const methodName = method.toLowerCase().replace(/_\w/g, function (index, match) {
+        return index.replace('_', '').toUpperCase()
+      })
+      expect(Response[methodName]).to.be.a('function')
+    })
+  })
+
   it('should set response header', function * () {
     const server = http.createServer(function (req, res) {
       Response.header(res, 'content-type', 'application/json')
