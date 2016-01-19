@@ -20,12 +20,14 @@ const methods = require('./methods')
  * @type {Object}
  */
 let Response = exports = module.exports = {}
+Response.descriptiveMethods = []
 
 const methodNames = Object.keys(methods)
 methodNames.forEach(function (method) {
   const methodName = method.toLowerCase().replace(/_\w/g, function (index, match) {
     return index.replace('_', '').toUpperCase()
   })
+  Response.descriptiveMethods.push(methodName)
   Response[methodName] = function (req, res, body) {
     Response.status(res, methods[method])
     Response.send(req, res, body)
