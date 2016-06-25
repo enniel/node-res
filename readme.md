@@ -81,20 +81,20 @@ nodeRes.json(req, res, {user:"someone"})
 nodeRes.jsonp(req, res, {user:"someone"}, "angular")
 ```
 
-#### download (res, filePath)
+#### download (req, res, filePath)
 
 ```javascript
-nodeRes.download(res, 'fullPathToFile')
+nodeRes.download(req, res, 'fullPathToFile')
 ```
 
-#### attachment (res, filePath, name?, disposition=attachment?)
+#### attachment (req, res, filePath, name?, disposition=attachment?)
 
 force download
 
 ```javascript
-nodeRes.attachment(res, 'fullPathToFile')
-nodeRes.attachment(res, 'fullPathToFile', 'downloadName')
-nodeRes.attachment(res, 'fullPathToFile', 'downloadName', 'disposition=attachment')
+nodeRes.attachment(req, res, 'fullPathToFile')
+nodeRes.attachment(req, res, 'fullPathToFile', 'downloadName')
+nodeRes.attachment(req, res, 'fullPathToFile', 'downloadName', 'disposition=attachment')
 ```
 
 #### location (res, url)
