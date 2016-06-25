@@ -13,6 +13,7 @@ const http = require('http')
 const chai = require('chai')
 const path = require('path')
 const methods = require('../src/Response/methods')
+const cf = require('co-functional')
 const expect = chai.expect
 
 require('co-mocha')
@@ -218,32 +219,30 @@ describe('Response', function () {
 
   it('should send file for download with proper headers', function * () {
     const server = http.createServer(function (req, res) {
-      Response.download(res, path.join(__dirname, './files/hello.txt'))
+      Response.download(req, res, path.join(__dirname, './files/hello.txt'))
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text.trim()).to.equal('hello world')
-    expect(res.headers['content-type']).to.equal('text/plain; charset=utf-8')
+    expect(res.headers['content-type']).to.equal('text/plain; charset=UTF-8')
     expect(res.headers['last-modified']).not.to.equal(undefined)
   })
 
   it('should send file to be force downloaded with proper headers', function * () {
     const server = http.createServer(function (req, res) {
-      Response.attachment(res, path.join(__dirname, './files/hello.txt'))
+      Response.attachment(req, res, path.join(__dirname, './files/hello.txt'))
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text.trim()).to.equal('hello world')
-    expect(res.headers['content-type']).to.equal('text/plain; charset=utf-8')
+    expect(res.headers['content-type']).to.equal('text/plain; charset=UTF-8')
     expect(res.headers['last-modified']).not.to.equal(undefined)
     expect(res.headers['content-disposition']).to.equal('attachment; filename="hello.txt"')
   })
 
   it('should throw an error when file is not readable', function * () {
     const server = http.createServer(function (req, res) {
-      Response.download(res, path.join(__dirname, './files/foo.txt'))
+      Response.download(req, res, path.join(__dirname, './files/foo.txt'))
     })
-    const res = yield supertest(server).get('/').expect(503)
-    expect(res.error.status).to.equal(503)
-    expect(JSON.parse(res.error.text).code).to.equal('ENOENT')
+    yield supertest(server).get('/').expect(404)
   })
 
   it('should set location header on response', function * () {
@@ -280,5 +279,15 @@ describe('Response', function () {
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.headers['vary']).to.equal('Origin')
+  })
+
+  it('should not hit the maxListeners when making more than 10 calls', function * () {
+    const server = http.createServer(function (req, res) {
+      Response.download(req, res, path.join(__dirname, './files/hello.txt'))
+    })
+    const requests = cf.map(function * () {
+      return yield supertest(server).get('/').expect(200)
+    }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+    yield requests
   })
 })

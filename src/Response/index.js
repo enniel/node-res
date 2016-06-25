@@ -8,9 +8,9 @@
 
 const mime = require('mime')
 const etag = require('etag')
-const fs = require('fs')
 const contentDisposition = require('content-disposition')
 const vary = require('vary')
+const send = require('send')
 const methods = require('./methods')
 
 /**
@@ -245,69 +245,14 @@ Response.jsonp = function (req, res, body, callback) {
 }
 
 /**
- * @description sending file to the client as response, it
- * creates a readable stream and pipe it response.
- * @method _sendFile
- * @param  {Object}  res
- * @param  {String}  filePath
- * @return {void}
- * @private
- */
-Response._sendFile = function (res, filePath) {
-  let readStream
-
-  /**
-   * executed on error
-   * @method onError
-   * @param  {Object} errorStack
-   */
-  function onError (errorStack) {
-    Response.status(res, 503)
-    Response.send({}, res, errorStack)
-    Response.end(res)
-  }
-
-  function onEnd () {
-    res.end()
-  }
-
-  /**
-   * making sure stream is readable before piping it through
-   * response.
-   * @method onceReadable
-   */
-  function onceReadable () {
-    const contentType = mime.lookup(filePath)
-    Response.safeHeader(res, 'Content-Type', contentType)
-    readStream.pipe(res)
-  }
-
-  function createStream () {
-    readStream = fs.createReadStream(filePath)
-    readStream.on('readable', onceReadable)
-    readStream.on('end', onEnd)
-    readStream.on('error', onError)
-  }
-
-  fs.stat(filePath, function (err, stats) {
-    if (err) {
-      return onError(err)
-    }
-    Response.header(res, 'Last-Modified', stats.mtime)
-    Response.header(res, 'Content-Length', stats.size)
-    createStream()
-  })
-}
-
-/**
  * @description sending file as response to client
  * @method download
  * @param  {Object} res
  * @param  {String} filePath
  * @return {void}
  */
-Response.download = function (res, filePath) {
-  Response._sendFile(res, filePath)
+Response.download = function (req, res, filePath) {
+  send(req, filePath).pipe(res)
 }
 
 /**
@@ -320,14 +265,14 @@ Response.download = function (res, filePath) {
  * @param  {String}   disposition
  * @return {void}
  */
-Response.attachment = function (res, filePath, name, disposition) {
+Response.attachment = function (req, res, filePath, name, disposition) {
   name = name || filePath
   disposition = disposition || 'attachment'
 
   Response.header(
     res, 'Content-Disposition', contentDisposition(name, {type: disposition})
   )
-  Response._sendFile(res, filePath)
+  send(req, filePath).pipe(res)
 }
 
 /**
