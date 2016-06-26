@@ -4,9 +4,9 @@
   "description": "Nodejs http response builder",
   "main": "index.js",
   "scripts": {
-    "test": "npm run standard && istanbul cover _mocha --report lcovonly -- -R spec test && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
-    "coverage": "npm run standard && istanbul cover _mocha test --bail",
-    "standard": "standard src/**/*.js test/*.js"
+    "test": "npm run lint && istanbul cover _mocha --report lcovonly -- -R spec test && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
+    "coverage": "npm run lint && istanbul cover _mocha test --bail",
+    "lint": "standard src/**/*.js test/*.js"
   },
   "author": "amanvirk",
   "license": "MIT",
