@@ -22,13 +22,13 @@ const nodeRes = require('node-res')
 http.createServer(function (req, res) {
   
   // plain text
-  nodeRes.send(res, "Hello world")
+  nodeRes.send(req, res, "Hello world")
 
   // json
-  nodeRes.json(res, {time:"now"})
+  nodeRes.json(req, res, {time:"now"})
 
   // jsonp
-  nodeRes.jsonp(res, {time:"now"}, "callback")
+  nodeRes.jsonp(req, res, {time:"now"}, "callback")
 
 }).listen(3000)
 
@@ -42,6 +42,14 @@ nodeRes takes http server `res` object as first argument to perform any operatio
 
 ```javascript
 nodeRes.header(res, 'Content-Type', 'text/html')
+```
+
+#### type (res, type, [charset=utf-8])
+
+This method will set the content type by doing a lookup on the given type and sets `charset=utf-8` by default.
+
+```javascript
+nodeRes.type(res, 'html')
 ```
 
 #### removeHeader (res, key)
