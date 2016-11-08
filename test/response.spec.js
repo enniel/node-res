@@ -100,7 +100,7 @@ describe('Response', function () {
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.body).deep.equal(body)
-    expect(res.headers['content-type']).to.equal('application/json')
+    expect(res.headers['content-type']).to.equal('application/json; charset=utf-8')
   })
 
   it('should send empty response', function * () {
@@ -140,7 +140,7 @@ describe('Response', function () {
     })
     const res = yield supertest(server).get('/').expect(200)
     expect(res.text).to.equal('hello world')
-    expect(res.headers['content-type']).to.equal('application/octet-stream')
+    expect(res.headers['content-type']).to.equal('application/octet-stream; charset=utf-8')
   })
 
   it('should send empty body for HEAD request', function * () {
@@ -149,7 +149,7 @@ describe('Response', function () {
       Response.send(req, res, body)
     })
     const res = yield supertest(server).head('/').expect(200)
-    expect(res.headers['content-type']).to.equal('application/octet-stream')
+    expect(res.headers['content-type']).to.equal('application/octet-stream; charset=utf-8')
     expect(res.text).to.equal('')
   })
 
@@ -289,5 +289,23 @@ describe('Response', function () {
       return yield supertest(server).get('/').expect(200)
     }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
     yield requests
+  })
+
+  it('should be able to set content type using the type method', function * () {
+    const server = http.createServer(function (req, res) {
+      Response.type(res, 'json')
+      Response.send(req, res, '')
+    })
+    const res = yield supertest(server).get('/').expect(200)
+    expect(res.headers['content-type']).to.equal('application/json; charset=utf-8')
+  })
+
+  it('should be able to override the charset using the type method', function * () {
+    const server = http.createServer(function (req, res) {
+      Response.type(res, 'json', 'myjson')
+      Response.send(req, res, '')
+    })
+    const res = yield supertest(server).get('/').expect(200)
+    expect(res.headers['content-type']).to.equal('application/json; charset=myjson')
   })
 })

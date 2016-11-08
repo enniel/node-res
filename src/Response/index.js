@@ -6,9 +6,10 @@
  * MIT Licensed
 */
 
-const mime = require('mime')
+const mime = require('mime-types')
 const etag = require('etag')
 const contentDisposition = require('content-disposition')
+const contentType = require('content-type')
 const vary = require('vary')
 const send = require('send')
 const methods = require('./methods')
@@ -48,23 +49,7 @@ methodNames.forEach(function (method) {
  * @public
  */
 Response.header = function (res, key, value) {
-  const charsetRegExp = /;\s*charset\s*=/
-
-  value = Array.isArray(value) ? value.map(String) : String(value)
-
-  /**
-   * setting up charset on content-type header
-   * @example
-   *   text/plain will become text/plain; charset=utf-8
-   */
-  if (key.toLowerCase() === 'content-type' && !charsetRegExp.test(value)) {
-    const charset = mime.charsets.lookup(value.split(';')[0])
-    if (charset) {
-      value += '; charset=' + charset.toLowerCase()
-    }
-  }
-
-  res.setHeader(key, value)
+  res.setHeader(key, Array.isArray(value) ? value.map(String) : String(value))
 }
 
 /**
@@ -133,7 +118,7 @@ Response.end = function (res) {
  */
 Response.send = function (req, res, body) {
   let chunk = body || ''
-  let type, contentType
+  let type
 
   /**
    * switching over data type and formatting data
@@ -158,12 +143,10 @@ Response.send = function (req, res, body) {
       break
   }
 
-  contentType = mime.lookup(type)
-
   /**
    * setting up content type on response headers
    */
-  Response.safeHeader(res, 'Content-Type', contentType)
+  Response.type(res, type)
 
   /**
    * setting up content length on response headers
@@ -206,7 +189,7 @@ Response.send = function (req, res, body) {
  * @return {void}
  */
 Response.json = function (req, res, body) {
-  Response.safeHeader(res, 'Content-Type', 'application/json')
+  Response.type(res, 'application/json')
   Response.send(req, res, body)
 }
 
@@ -223,7 +206,7 @@ Response.jsonp = function (req, res, body, callback) {
   callback = callback || 'callback'
 
   Response.header(res, 'X-Content-Type-Options', 'nosniff')
-  Response.safeHeader(res, 'Content-Type', 'text/javascript')
+  Response.type(res, 'text/javascript')
 
   body = JSON.stringify(body)
 
@@ -314,4 +297,26 @@ Response.redirect = function (req, res, url, status) {
  */
 Response.vary = function (res, field) {
   vary(res, field)
+}
+
+/**
+ * Set content type header by looking up the actual
+ * type and setting charset to utf8
+ *
+ * @param  {Object} res
+ * @param  {String} type
+ * @param  {String} [charset]
+ * @return {void}
+ *
+ * @example
+ * Response.type(res, 'html')
+ * Response.type(res, 'json')
+ * Response.type(res, 'application/json')
+ */
+Response.type = function (res, type, charset) {
+  charset = charset || 'utf-8'
+  const ct = type.indexOf('/') === -1 ? mime.lookup(type) || 'text/html' : type
+  const parsedType = contentType.parse(ct)
+  parsedType.parameters.charset = charset
+  Response.safeHeader(res, 'Content-Type', contentType.format(parsedType))
 }
