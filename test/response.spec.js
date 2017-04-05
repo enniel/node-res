@@ -13,7 +13,6 @@ const test = require('japa')
 const supertest = require('supertest')
 const http = require('http')
 const path = require('path')
-const cf = require('co-functional')
 const methods = require('../src/Response/methods')
 const Response = require('../')
 
@@ -283,10 +282,8 @@ test.group('Response', function (assert) {
     const server = http.createServer(function (req, res) {
       Response.download(req, res, path.join(__dirname, './files/hello.txt'))
     })
-    const requests = cf.map(async function (assert) {
-      return await supertest(server).get('/').expect(200)
-    }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
-    await requests
+    const requests = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(() => supertest(server).get('/').expect(200))
+    await Promise.all(requests)
   })
 
   test('should be able to set content type using the type method', async function (assert) {
