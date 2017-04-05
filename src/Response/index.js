@@ -36,6 +36,21 @@ methodNames.forEach(function (method) {
 })
 
 /**
+ * Returns value for existing headers
+ *
+ * @method getHeader
+ *
+ * @param  {Object}  res [description]
+ * @param  {String}  key [description]
+ *
+ * @return {Array}
+ */
+Response.getHeader = function (res, key) {
+  const headers = typeof (res.getHeaders) === 'function' ? res.getHeaders() : res._headers || {}
+  return headers[key.toLowerCase()] || []
+}
+
+/**
  * @description sets response header on http response
  * object
  * @method header
@@ -49,7 +64,20 @@ methodNames.forEach(function (method) {
  * @public
  */
 Response.header = function (res, key, value) {
-  res.setHeader(key, Array.isArray(value) ? value.map(String) : String(value))
+  value = Array.isArray(value) ? value : [value]
+
+  /**
+   * Fetch existing headers, so that we can append
+   * to them
+   */
+  const previousHeader = Response.getHeader(res, key)
+  if (!previousHeader) {
+    res.setHeader(key, value.map(String))
+    return
+  }
+
+  const headers = Array.isArray(previousHeader) ? previousHeader.concat(value) : [previousHeader].concat(value)
+  res.setHeader(key, headers.map(String))
 }
 
 /**
@@ -117,6 +145,15 @@ Response.end = function (res) {
  * @return {void}
  */
 Response.send = function (req, res, body) {
+  if (body === null) {
+    Response.status(res, 204)
+    Response.removeHeader(res, 'Content-Type')
+    Response.removeHeader(res, 'Content-Length')
+    Response.removeHeader(res, 'Transfer-Encoding')
+    Response.end(res)
+    return
+  }
+
   let chunk = body || ''
   let type
 
@@ -126,7 +163,7 @@ Response.send = function (req, res, body) {
    */
   switch (typeof chunk) {
     case 'string':
-      type = 'html'
+      type = /^\s*</.test(chunk) ? 'html' : 'text'
       break
     case 'boolean':
     case 'number':
@@ -153,7 +190,7 @@ Response.send = function (req, res, body) {
    */
   if (chunk) {
     if (!Buffer.isBuffer(chunk)) {
-      chunk = new Buffer(chunk)
+      chunk = Buffer.from(chunk, 'utf-8')
     }
     const length = chunk.length
     Response.header(res, 'Content-Length', length)

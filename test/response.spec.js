@@ -6,90 +6,86 @@
  * MIT Licensed
 */
 
-/*global it, describe*/
-const Response = require('../')
-const supertest = require('co-supertest')
+const test = require('japa')
+const supertest = require('supertest')
 const http = require('http')
-const chai = require('chai')
 const path = require('path')
-const methods = require('../src/Response/methods')
 const cf = require('co-functional')
-const expect = chai.expect
+const methods = require('../src/Response/methods')
+const Response = require('../')
 
-require('co-mocha')
-
-describe('Response', function () {
-  it('should set dynamic method on response object which auto set statues', function * () {
+test.group('Response', function (assert) {
+  test('should set dynamic method on response object which auto set statuses', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.tooManyRequests(req, res, 'Please wait')
     })
-    const response = yield supertest(server).get('/').expect(429)
-    expect(response.text).to.equal('Please wait')
+    const response = await supertest(server).get('/').expect(429)
+    assert.equal(response.text, 'Please wait')
   })
 
-  it('should have all descriptive methods on response status, point to right status', function () {
+  test('should have all descriptive methods on response status, point to right status', function (assert) {
     const methodNames = Object.keys(methods)
     methodNames.forEach(function (method) {
       const methodName = method.toLowerCase().replace(/_\w/g, function (index, match) {
         return index.replace('_', '').toUpperCase()
       })
-      expect(Response[methodName]).to.be.a('function')
+      assert.isFunction(Response[methodName])
     })
   })
 
-  it('should set response header', function * () {
+  test('should set response header', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.header(res, 'content-type', 'application/json')
       res.end()
     })
-    yield supertest(server).get('/').expect(200).expect('Content-Type', /json/).end()
+    await supertest(server).get('/').expect(200).expect('Content-Type', /json/)
   })
 
-  it('should not set response header when already there by using safeHeader method', function * () {
+  test('should not set response header when already there by using safeHeader method', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.header(res, 'content-type', 'application/json')
       Response.safeHeader(res, 'content-type', 'text/html')
       res.end()
     })
-    yield supertest(server).get('/').expect(200).expect('Content-Type', /json/).end()
+    await supertest(server).get('/').expect(200).expect('Content-Type', /json/)
   })
 
-  it('should set an array of headers for a given field', function * () {
+  test('should set an array of headers for a given field', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.header(res, 'Foo', ['bar', 'baz'])
       res.end()
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.headers.foo).to.equal('bar, baz')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.headers.foo, 'bar, baz')
   })
 
-  it('should set response status', function * () {
+  test('should set response status', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.status(res, 400)
       res.end()
     })
-    yield supertest(server).get('/').expect(400)
+    await supertest(server).get('/').expect(400)
   })
 
-  it('should send text back to client with proper headers', function * () {
+  test('should send text back to client with proper headers', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.send(req, res, 'hello world')
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal('hello world')
-    expect(res.headers['content-type']).to.equal('text/html; charset=utf-8')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text, 'hello world')
+    assert.equal(res.headers['content-type'], 'text/plain; charset=utf-8')
   })
 
-  it('should send number back to client with proper headers', function * () {
+  test('should send number back to client with proper headers', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.send(req, res, 1)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal('1')
-    expect(res.headers['content-type']).to.equal('text/plain; charset=utf-8')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text, '1')
+    assert.equal(res.headers['content-type'], 'text/plain; charset=utf-8')
   })
 
-  it('should send json back to client with proper headers', function * () {
+  test('should send json back to client with proper headers', async function (assert) {
     const body = {
       name: 'foo',
       age: 22,
@@ -98,71 +94,70 @@ describe('Response', function () {
     const server = http.createServer(function (req, res) {
       Response.send(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.body).deep.equal(body)
-    expect(res.headers['content-type']).to.equal('application/json; charset=utf-8')
+    const res = await supertest(server).get('/').expect(200)
+    assert.deepEqual(res.body, body)
+    assert.equal(res.headers['content-type'], 'application/json; charset=utf-8')
   })
 
-  it('should send empty response', function * () {
+  test('should send empty response', async function (assert) {
     const body = ''
     const server = http.createServer(function (req, res) {
       Response.send(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal('')
-    expect(res.headers['content-type']).to.equal('text/html; charset=utf-8')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text, '')
+    assert.equal(res.headers['content-type'], 'text/plain; charset=utf-8')
   })
 
-  it('should send empty response when request body is null', function * () {
+  test('should send empty response when request body is null', async function (assert) {
     const body = null
     const server = http.createServer(function (req, res) {
       Response.send(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal('')
-    expect(res.headers['content-type']).to.equal('text/html; charset=utf-8')
+    const res = await supertest(server).get('/').expect(204)
+    assert.equal(res.text, '')
   })
 
-  it('should send boolean as response', function * () {
+  test('should send boolean as response', async function (assert) {
     const body = true
     const server = http.createServer(function (req, res) {
       Response.send(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal('true')
-    expect(res.headers['content-type']).to.equal('text/plain; charset=utf-8')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text, 'true')
+    assert.equal(res.headers['content-type'], 'text/plain; charset=utf-8')
   })
 
-  it('should send buffer as response', function * () {
-    const body = new Buffer('hello world', 'utf8')
+  test('should send buffer as response', async function (assert) {
+    const body = Buffer.from('hello world', 'utf8')
     const server = http.createServer(function (req, res) {
       Response.send(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal('hello world')
-    expect(res.headers['content-type']).to.equal('application/octet-stream; charset=utf-8')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.body.toString(), 'hello world')
+    assert.equal(res.headers['content-type'], 'application/octet-stream; charset=utf-8')
   })
 
-  it('should send empty body for HEAD request', function * () {
-    const body = new Buffer('hello world', 'utf8')
+  test('should send empty body for HEAD request', async function (assert) {
+    const body = Buffer.from('hello world', 'utf8')
     const server = http.createServer(function (req, res) {
       Response.send(req, res, body)
     })
-    const res = yield supertest(server).head('/').expect(200)
-    expect(res.headers['content-type']).to.equal('application/octet-stream; charset=utf-8')
-    expect(res.text).to.equal('')
+    const res = await supertest(server).head('/').expect(200)
+    assert.equal(res.headers['content-type'], 'application/octet-stream; charset=utf-8')
+    assert.deepEqual(res.body, {})
   })
 
-  it('should not override existing status by calling send method', function * () {
+  test('should not override existing status by calling send method', async function (assert) {
     const body = true
     const server = http.createServer(function (req, res) {
       Response.status(res, 204)
       Response.send(req, res, body)
     })
-    yield supertest(server).get('/').expect(204)
+    await supertest(server).get('/').expect(204)
   })
 
-  it('should send valid json response using json as shorthand method', function * () {
+  test('should send valid json response using json as shorthand method', async function (assert) {
     const body = {
       foo: 'bar',
       baz: ['foo', 'bar']
@@ -170,11 +165,11 @@ describe('Response', function () {
     const server = http.createServer(function (req, res) {
       Response.json(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.body).deep.equal(body)
+    const res = await supertest(server).get('/').expect(200)
+    assert.deepEqual(res.body, body)
   })
 
-  it('should send jsonp response back to client with default callback', function * () {
+  test('should send jsonp response back to client with default callback', async function (assert) {
     const body = {
       name: 'foo',
       age: 22,
@@ -184,13 +179,13 @@ describe('Response', function () {
     const server = http.createServer(function (req, res) {
       Response.jsonp(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal(response)
-    expect(res.headers['content-type']).to.equal('text/javascript; charset=utf-8')
-    expect(res.headers['x-content-type-options']).to.equal('nosniff')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text, response)
+    assert.equal(res.headers['content-type'], 'text/javascript; charset=utf-8')
+    assert.equal(res.headers['x-content-type-options'], 'nosniff')
   })
 
-  it('should send jsonp response back to client with defined callback', function * () {
+  test('should send jsonp response back to client with defined callback', async function (assert) {
     const body = {
       name: 'foo',
       age: 22,
@@ -200,112 +195,123 @@ describe('Response', function () {
     const server = http.createServer(function (req, res) {
       Response.jsonp(req, res, body, 'foo')
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text).to.equal(response)
-    expect(res.headers['content-type']).to.equal('text/javascript; charset=utf-8')
-    expect(res.headers['x-content-type-options']).to.equal('nosniff')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text, response)
+    assert.equal(res.headers['content-type'], 'text/javascript; charset=utf-8')
+    assert.equal(res.headers['x-content-type-options'], 'nosniff')
   })
 
-  it('should remove irrelevant headers when response status is 204 or 304', function * () {
+  test('should remove irrelevant headers when response status is 204 or 304', async function (assert) {
     const body = 'hello world'
     const server = http.createServer(function (req, res) {
       Response.status(res, 204)
       Response.send(req, res, body)
     })
-    const res = yield supertest(server).get('/').expect(204)
-    expect(res.headers['content-type']).to.equal(undefined)
-    expect(res.headers['content-length']).to.equal(undefined)
+    const res = await supertest(server).get('/').expect(204)
+    assert.equal(res.headers['content-type'], undefined)
+    assert.equal(res.headers['content-length'], undefined)
   })
 
-  it('should send file for download with proper headers', function * () {
+  test('should send file for download with proper headers', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.download(req, res, path.join(__dirname, './files/hello.txt'))
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text.trim()).to.equal('hello world')
-    expect(res.headers['content-type']).to.equal('text/plain; charset=UTF-8')
-    expect(res.headers['last-modified']).not.to.equal(undefined)
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text.trim(), 'hello world')
+    assert.equal(res.headers['content-type'], 'text/plain; charset=UTF-8')
+    assert.notEqual(res.headers['last-modified'], undefined)
   })
 
-  it('should send file to be force downloaded with proper headers', function * () {
+  test('should send file to be force downloaded with proper headers', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.attachment(req, res, path.join(__dirname, './files/hello.txt'))
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.text.trim()).to.equal('hello world')
-    expect(res.headers['content-type']).to.equal('text/plain; charset=UTF-8')
-    expect(res.headers['last-modified']).not.to.equal(undefined)
-    expect(res.headers['content-disposition']).to.equal('attachment; filename="hello.txt"')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.text.trim(), 'hello world')
+    assert.equal(res.headers['content-type'], 'text/plain; charset=UTF-8')
+    assert.notEqual(res.headers['last-modified'], undefined)
+    assert.equal(res.headers['content-disposition'], 'attachment; filename="hello.txt"')
   })
 
-  it('should throw an error when file is not readable', function * () {
+  test('should throw an error when file is not readable', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.download(req, res, path.join(__dirname, './files/foo.txt'))
     })
-    yield supertest(server).get('/').expect(404)
+    await supertest(server).get('/').expect(404)
   })
 
-  it('should set location header on response', function * () {
+  test('should set location header on response', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.location(res, 'http://localhost')
       Response.send(req, res, '')
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.headers['location']).to.equal('http://localhost')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.headers['location'], 'http://localhost')
   })
 
-  it('should redirect to a given url', function * () {
+  test('should redirect to a given url', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.redirect(req, res, 'http://localhost', 301)
     })
-    const res = yield supertest(server).get('/').expect(301)
-    expect(res.headers['location']).to.equal('http://localhost')
-    expect(res.headers['content-length']).to.equal('0')
+    const res = await supertest(server).get('/').expect(301)
+    assert.equal(res.headers['location'], 'http://localhost')
+    assert.equal(res.headers['content-length'], '0')
   })
 
-  it('should redirect with 302 when status is not defined', function * () {
+  test('should redirect with 302 when status is not defined', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.redirect(req, res, 'http://localhost')
     })
-    const res = yield supertest(server).get('/').expect(302)
-    expect(res.headers['location']).to.equal('http://localhost')
-    expect(res.headers['content-length']).to.equal('0')
+    const res = await supertest(server).get('/').expect(302)
+    assert.equal(res.headers['location'], 'http://localhost')
+    assert.equal(res.headers['content-length'], '0')
   })
 
-  it('should add vary header', function * () {
+  test('should add vary header', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.vary(res, 'Origin')
       Response.send(req, res, '')
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.headers['vary']).to.equal('Origin')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.headers['vary'], 'Origin')
   })
 
-  it('should not hit the maxListeners when making more than 10 calls', function * () {
+  test('should not hit the maxListeners when making more than 10 calls', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.download(req, res, path.join(__dirname, './files/hello.txt'))
     })
-    const requests = cf.map(function * () {
-      return yield supertest(server).get('/').expect(200)
+    const requests = cf.map(async function (assert) {
+      return await supertest(server).get('/').expect(200)
     }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
-    yield requests
+    await requests
   })
 
-  it('should be able to set content type using the type method', function * () {
+  test('should be able to set content type using the type method', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.type(res, 'json')
       Response.send(req, res, '')
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.headers['content-type']).to.equal('application/json; charset=utf-8')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.headers['content-type'], 'application/json; charset=utf-8')
   })
 
-  it('should be able to override the charset using the type method', function * () {
+  test('should be able to override the charset using the type method', async function (assert) {
     const server = http.createServer(function (req, res) {
       Response.type(res, 'json', 'myjson')
       Response.send(req, res, '')
     })
-    const res = yield supertest(server).get('/').expect(200)
-    expect(res.headers['content-type']).to.equal('application/json; charset=myjson')
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.headers['content-type'], 'application/json; charset=myjson')
+  })
+
+  test('should append to existing headers', async function (assert) {
+    const server = http.createServer(function (req, res) {
+      Response.header(res, 'Foo', 'bar')
+      Response.header(res, 'Foo', 'baz')
+      Response.header(res, 'Foo', 'foo')
+      res.end()
+    })
+    const res = await supertest(server).get('/').expect(200)
+    assert.equal(res.headers.foo, 'bar, baz, foo')
   })
 })
