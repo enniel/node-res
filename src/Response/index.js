@@ -16,54 +16,100 @@ const vary = require('vary')
 const send = require('send')
 const methods = require('./methods')
 
-/**
- * @description Utility class that makes eaiser to
- * send http response.
- * @module Response
- * @type {Object}
- */
-let Response = exports = module.exports = {}
-Response.descriptiveMethods = []
+const returnContentAndType = function (body) {
+  /**
+   * Return the body and it's type when
+   * body is a string.
+   */
+  if (typeof (body) === 'string') {
+    return {
+      body,
+      type: /^\s*</.test(body) ? 'html' : 'text'
+    }
+  }
 
-const methodNames = Object.keys(methods)
-methodNames.forEach(function (method) {
+  /**
+   * If body is a buffer, return the exact copy
+   * and type as bin.
+   */
+  if (Buffer.isBuffer(body)) {
+    return { body, type: 'bin' }
+  }
+
+  /**
+   * If body is a number or boolean. Convert it to
+   * a string and return the type as text.
+   */
+  if (typeof (body) === 'number' || typeof (body) === 'boolean') {
+    return { body: String(body), type: 'text' }
+  }
+
+  /**
+   * Otherwise check whether body is an object or not. If yes
+   * stringify it and otherwise return the exact copy.
+   */
+  return typeof (body) === 'object' ? { body: JSON.stringify(body), type: 'json' } : { body }
+}
+
+/**
+ * This is a static utility class to make HTTP response
+ * in Node.js. It works like a facade over HTTP res
+ * object but without side-effects.
+ *
+ * @class Response
+ * @static
+ */
+const Response = exports = module.exports = {}
+
+Response.descriptiveMethods = Object.keys(methods).map((method) => {
   const methodName = method.toLowerCase().replace(/_\w/g, function (index, match) {
     return index.replace('_', '').toUpperCase()
   })
-  Response.descriptiveMethods.push(methodName)
   Response[methodName] = function (req, res, body) {
     Response.status(res, methods[method])
     Response.send(req, res, body)
   }
+  return methodName
 })
 
 /**
- * Returns value for existing headers
+ * Returns the value of an existing header on
+ * the response object
  *
  * @method getHeader
  *
- * @param  {Object}  res [description]
- * @param  {String}  key [description]
+ * @param  {Object}  res
+ * @param  {String}  key
  *
  * @return {Array}
+ *
+ * @example
+ * ```js
+ * nodeRes.getHeader(res, 'Content-type')
+ * ```
  */
 Response.getHeader = function (res, key) {
-  const headers = typeof (res.getHeaders) === 'function' ? res.getHeaders() : res._headers || {}
-  return headers[key.toLowerCase()] || []
+  return res.getHeader(key)
 }
 
 /**
- * @description sets response header on http response
- * object
+ * Sets header on the response object
+ *
  * @method header
+ *
  * @param  {Object} res
  * @param  {String} key
- * @param  {Mixed} value
+ * @param  {String} value
+ *
  * @return {void}
+ *
  * @example
- *   Response.set('foo','bar')
- *   Response.set('foo',['bar','baz'])
- * @public
+ * ```js
+ * nodeRes.header(res, 'Content-type', 'application/json')
+ *
+ * // or set an array of headers
+ * nodeRes.header(res, 'Link', ['<http://localhost/>', '<http://localhost:3000/>'])
+ * ```
  */
 Response.header = function (res, key, value) {
   value = Array.isArray(value) ? value : [value]
@@ -83,20 +129,40 @@ Response.header = function (res, key, value) {
 }
 
 /**
- * @description sets response status code
+ * Set status on the HTTP res object
+ *
  * @method status
+ *
  * @param  {Object} res
  * @param  {Number} code
+ *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.status(200)
+ * ```
  */
 Response.status = function (res, code) {
   res.statusCode = code
 }
 
 /**
- * @description set response header if same
+ * Sets the header on response object, only if it
+ * does not exists.
+ *
  * @method safeHeader
- * @see  Response.header
+ *
+ * @param  {Object}   res
+ * @param  {String}   key
+ * @param  {String}   value
+ *
+ * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.safeHeader(res, 'Content-type', 'application/json')
+ * ```
  */
 Response.safeHeader = function (res, key, value) {
   if (!res.getHeader(key)) {
@@ -116,21 +182,31 @@ Response.removeHeader = function (res, key) {
 }
 
 /**
- * @description writing to response object
+ * Write string or buffer to the response object.
+ *
  * @method write
+ *
  * @param  {Object} res
- * @param  {Mixed} body
+ * @param  {String|Buffer} body
+ *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.write(res, 'Hello world')
+ * ```
  */
 Response.write = function (res, body) {
   res.write(body)
 }
 
 /**
- * @description ending response, after this adding
- * headers or body will not work.
+ * Explictly end HTTP response
+ *
  * @method end
+ *
  * @param  {Object} res
+ *
  * @return {void}
  */
 Response.end = function (res) {
@@ -138,12 +214,19 @@ Response.end = function (res) {
 }
 
 /**
- * @description sends request body by writing
- * it on http response object.
+ * Send body as the HTTP response and end it. Also
+ * this method will set the appropriate `Content-type`
+ * and `Content-length`.
+ *
+ * If body is set to null, this method will end the response
+ * as 204.
+ *
  * @method send
+ *
  * @param  {Object} req
  * @param  {Object} res
  * @param  {Mixed} body
+ *
  * @return {void}
  */
 Response.send = function (req, res, body) {
@@ -156,35 +239,7 @@ Response.send = function (req, res, body) {
     return
   }
 
-  let chunk = body || ''
-  let type
-
-  /**
-   * switching over data type and formatting data
-   * to be sent on http response.
-   */
-  switch (typeof chunk) {
-    case 'string':
-      type = /^\s*</.test(chunk) ? 'html' : 'text'
-      break
-    case 'boolean':
-    case 'number':
-      type = 'text'
-      chunk = String(chunk)
-      break
-    case 'object':
-      if (Buffer.isBuffer(chunk)) {
-        type = 'bin'
-      } else {
-        type = 'json'
-        chunk = JSON.stringify(chunk)
-      }
-      break
-  }
-
-  /**
-   * setting up content type on response headers
-   */
+  let { body: chunk, type } = returnContentAndType(body)
   Response.type(res, type)
 
   /**
@@ -220,12 +275,22 @@ Response.send = function (req, res, body) {
 }
 
 /**
- * @description make json response with proper
- * content type header
+ * Returns the HTTP response with `Content-type`
+ * set to `application/json`.
+ *
  * @method json
+ *
+ * @param  {Object} req
  * @param  {Object} res
- * @param  {Mixed} body
+ * @param  {Object} body
+ *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.json(req, res, { name: 'virk' })
+ * nodeRes.json(req, res, [ 'virk', 'joe' ])
+ * ```
  */
 Response.json = function (req, res, body) {
   Response.type(res, 'application/json')
@@ -233,17 +298,24 @@ Response.json = function (req, res, body) {
 }
 
 /**
- * @description makes valid jsonp response with given
- * callback
+ * Make JSONP response with `Content-type` set to
+ * `text/javascript`.
+ *
  * @method jsonp
+ *
+ * @param  {Object}   req
  * @param  {Object}   res
- * @param  {Mixed}   body
- * @param  {Function} callback
+ * @param  {Object}   body
+ * @param  {String}   [callbackFn = 'callback']
+ *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.jsonp(req, res, { name: 'virk' }, 'callback')
+ * ```
  */
-Response.jsonp = function (req, res, body, callback) {
-  callback = callback || 'callback'
-
+Response.jsonp = function (req, res, body, callbackFn = 'callback') {
   Response.header(res, 'X-Content-Type-Options', 'nosniff')
   Response.type(res, 'text/javascript')
 
@@ -257,51 +329,71 @@ Response.jsonp = function (req, res, body, callback) {
     .replace(/\u2029/g, '\\u2029')
 
   /**
-   * setting up callback on response body , typeof will make
-   * sure not to throw error of client if callback is not
+   * setting up callbackFn on response body , typeof will make
+   * sure not to throw error of client if callbackFn is not
    * a function
    */
-  body = '/**/ typeof ' + callback + " === 'function' && " + callback + '(' + body + ');'
-
+  body = '/**/ typeof ' + callbackFn + " === 'function' && " + callbackFn + '(' + body + ');'
   Response.send(req, res, body)
 }
 
 /**
- * @description sending file as response to client
+ * Download file as a stream. Stream will be closed once
+ * download is finished.
+ *
+ * Options are passed directly to [send](https://www.npmjs.com/package/send)
+ *
  * @method download
+ *
+ * @param  {Object} req
  * @param  {Object} res
  * @param  {String} filePath
+ * @param  {Object} [options = {}]
+ *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.download(req, res, '/storage/data.txt')
+ * ```
  */
-Response.download = function (req, res, filePath) {
-  send(req, filePath).pipe(res)
+Response.download = function (req, res, filePath, options = {}) {
+  send(req, filePath, options).pipe(res)
 }
 
 /**
- * @description force downloading files by setting up
- * content disposition header
+ * Send file as a stream with Content-Disposition of attachment
+ * which forces the download of the file.
+ *
  * @method attachment
+ *
+ * @param  {Object}   req
  * @param  {Object}   res
  * @param  {String}   filePath
- * @param  {String}   name
- * @param  {String}   disposition
+ * @param  {String}   [name = filePath]
+ * @param  {String}   [disposition = 'attachment']
+ * @param  {Object}   [options]
+ *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.attachment(req, res, '/storage/data.txt', 'data.txt')
+ * ```
  */
-Response.attachment = function (req, res, filePath, name, disposition) {
-  name = name || filePath
-  disposition = disposition || 'attachment'
-
-  Response.header(
-    res, 'Content-Disposition', contentDisposition(name, {type: disposition})
-  )
-  send(req, filePath).pipe(res)
+Response.attachment = function (req, res, filePath, name = filePath, disposition = 'attachment', options) {
+  Response.header(res, 'Content-Disposition', contentDisposition(name, {type: disposition}))
+  send(req, filePath, options).pipe(res)
 }
 
 /**
- * @description sets location header on response
+ * Set `Location` header on the HTTP response.
+ *
  * @method location
+ *
  * @param  {Object} res
  * @param  {String} url
+ *
  * @return {void}
  */
 Response.location = function (res, url) {
@@ -309,17 +401,23 @@ Response.location = function (res, url) {
 }
 
 /**
- * @description redirects to a given url by setting
- * up location header
+ * Redirect the HTTP request to the given url.
+ *
  * @method redirect
+ *
  * @param  {Object} req
  * @param  {Object} res
  * @param  {String} url
- * @param  {Number} status
+ * @param  {Number} [status = 302]
+ *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.redirect(req, res, '/')
+ * ```
  */
-Response.redirect = function (req, res, url, status) {
-  status = status || 302
+Response.redirect = function (req, res, url, status = 302) {
   const body = ''
   Response.status(res, status)
   Response.location(res, url)
@@ -328,10 +426,13 @@ Response.redirect = function (req, res, url, status) {
 }
 
 /**
- * adds vary header for a given field
+ * Add vary header to the HTTP response.
+ *
  * @method vary
+ *
  * @param  {Object} res
  * @param  {String} field
+ *
  * @return {void}
  */
 Response.vary = function (res, field) {
@@ -342,18 +443,21 @@ Response.vary = function (res, field) {
  * Set content type header by looking up the actual
  * type and setting charset to utf8
  *
+ * @method type
+ *
  * @param  {Object} res
  * @param  {String} type
- * @param  {String} [charset]
+ * @param  {String} [charset = 'utf-8']
  * @return {void}
  *
  * @example
- * Response.type(res, 'html')
- * Response.type(res, 'json')
- * Response.type(res, 'application/json')
+ * ```js
+ * nodeRes.type(res, 'html')
+ * nodeRes.type(res, 'json')
+ * nodeRes.type(res, 'application/json')
+ * ```
  */
-Response.type = function (res, type, charset) {
-  charset = charset || 'utf-8'
+Response.type = function (res, type, charset = 'utf-8') {
   const ct = type.indexOf('/') === -1 ? mime.lookup(type) || 'text/html' : type
   const parsedType = contentType.parse(ct)
   parsedType.parameters.charset = charset
