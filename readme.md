@@ -1,17 +1,28 @@
 # Node Res
 
-![](http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png)
+> A facade over Node.js HTTP `res` object with no side-effects.
 
-![](https://img.shields.io/travis/poppinss/node-res.svg)
-[![Coverage Status](https://coveralls.io/repos/poppinss/node-res/badge.svg?branch=master&service=github)](https://coveralls.io/github/poppinss/node-res?branch=master)
+<br />
 
-`node-res` exposes helper methods to constructor different http response. It supports almost every method from `express` but is just an I/O module.
+<p align="center">
+  <a href="http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png">
+    <img src="http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png" width="600px" />
+  </a>
+</p>
+
+<br />
+
+---
+
+[![NPM Version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+[![Appveyor][appveyor-image]][appveyor-url]
 
 
 ## See also
 
-1. node-req
-2. node-cookie
+1. [node-req](https://npmjs.org/package/node-req)
+2. [node-cookie](https://npmjs.org/package/node-res)
 
 ## Responding to requests.
 
@@ -34,102 +45,340 @@ http.createServer(function (req, res) {
 
 ```
 
-nodeRes takes http server `res` object as first argument to perform any operation.
+nodeRes takes http server `res` object as first argument to perform any operations.
 
 ## Methods
 
-#### header (res, key, value)
+### getHeader
+Returns the value of an existing header on
+the response object
 
-```javascript
-nodeRes.header(res, 'Content-Type', 'text/html')
-```
+**Params**
 
-#### type (res, type, [charset=utf-8])
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| key | String | Yes | &nbsp; |
 
-This method will set the content type by doing a lookup on the given type and sets `charset=utf-8` by default.
+**Returns**
+Array
 
-```javascript
-nodeRes.type(res, 'html')
-```
-
-#### removeHeader (res, key)
-
-```
-nodeRes.removeHeader(res, 'Content-type')
-```
-
-#### getHeader (res, key)
-
-```
+**Example**
+```js
 nodeRes.getHeader(res, 'Content-type')
 ```
 
-#### status (res, statusCode)
+----
+### header
+Sets header on the response object
 
-```javascript
-nodeRes.status(res, 200)
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| key | String | Yes | &nbsp; |
+| value | String | Yes | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.header(res, 'Content-type', 'application/json')
+
+// or set an array of headers
+nodeRes.header(res, 'Link', ['<http://localhost/>', '<http://localhost:3000/>'])
 ```
 
-#### send(req, res, body)
+----
+### status
+Set status on the HTTP res object
 
-```javascript
-nodeRes.send(req, res, {user:"someone"})
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| code | Number | Yes | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.status(200)
 ```
 
-#### json (req, res, body)
-`send` method is fully capable of making json responses, it is an alias method for readability.
+----
+### safeHeader
+Sets the header on response object, only if it
+does not exists.
 
-```javascript
-nodeRes.json(req, res, {user:"someone"})
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| key | String | Yes | &nbsp; |
+| value | String | Yes | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.safeHeader(res, 'Content-type', 'application/json')
 ```
 
-#### jsonp (req, res, body, callback="callback")
+----
+### removeHeader
+removing header using it's key
 
-```javascript
-nodeRes.jsonp(req, res, {user:"someone"}, "angular")
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| key | String | Yes | &nbsp; |
+
+**Returns**
+Void
+
+----
+### write
+Write string or buffer to the response object.
+
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| body | String|Buffer | Yes | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.write(res, 'Hello world')
 ```
 
-#### download (req, res, filePath)
+----
+### end
+Explictly end HTTP response
 
-```javascript
-nodeRes.download(req, res, 'fullPathToFile')
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+
+**Returns**
+Void
+
+----
+### send
+Send body as the HTTP response and end it. Also
+this method will set the appropriate `Content-type`
+and `Content-length`.
+
+If body is set to null, this method will end the response
+as 204.
+
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| req | Object | Yes | &nbsp; |
+| res | Object | Yes | &nbsp; |
+| body | Mixed | Yes | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.send(req, res, 'Hello world')
+
+// or html
+nodeRes.send(req, res, '<h2> Hello world </h2>')
+
+// or JSON
+nodeRes.send(req, res, { greeting: 'Hello world' })
+
+// or Buffer
+nodeRes.send(req, res, Buffer.from('Hello world', 'utf-8'))
 ```
 
-#### attachment (req, res, filePath, name?, disposition=attachment?)
+----
+### json
+Returns the HTTP response with `Content-type`
+set to `application/json`.
 
-force download
+**Params**
 
-```javascript
-nodeRes.attachment(req, res, 'fullPathToFile')
-nodeRes.attachment(req, res, 'fullPathToFile', 'downloadName')
-nodeRes.attachment(req, res, 'fullPathToFile', 'downloadName', 'disposition=attachment')
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| req | Object | Yes | &nbsp; |
+| res | Object | Yes | &nbsp; |
+| body | Object | Yes | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.json(req, res, { name: 'virk' })
+nodeRes.json(req, res, [ 'virk', 'joe' ])
 ```
 
-#### location (res, url)
+----
+### jsonp
+Make JSONP response with `Content-type` set to
+`text/javascript`.
 
-sets location header on request
+**Params**
 
-```javascript
-nodeRes.location(res, 'http://example.org')
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| req | Object | Yes | &nbsp; |
+| res | Object | Yes | &nbsp; |
+| body | Object | Yes | &nbsp; |
+| callbackFn  | String | No | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.jsonp(req, res, { name: 'virk' }, 'callback')
 ```
 
-#### redirect (req, res, url, status=302?)
+----
+### download
+Download file as a stream. Stream will be closed once
+download is finished.
 
-redirects to given url after setting location header
+Options are passed directly to [send](https://www.npmjs.com/package/send)
 
-```javascript
-nodeRes.redirect(res, 'http://example.com', 301)
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| req | Object | Yes | &nbsp; |
+| res | Object | Yes | &nbsp; |
+| filePath | String | Yes | &nbsp; |
+| options  | Object | No | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.download(req, res, '/storage/data.txt')
 ```
 
-#### vary (res, field)
+----
+### attachment
+Send file as a stream with Content-Disposition of attachment
+which forces the download of the file.
 
-Adds vary header to response, if it is not there already.
+**Params**
 
-```javascript
-nodeRes.vary(res, 'Accept')
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| req | Object | Yes | &nbsp; |
+| res | Object | Yes | &nbsp; |
+| filePath | String | Yes | &nbsp; |
+| name  | String | No | &nbsp; |
+| disposition  | String | No | &nbsp; |
+| options | Object | No | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.attachment(req, res, '/storage/data.txt', 'data.txt')
 ```
 
-#### descriptive methods
+----
+### location
+Set `Location` header on the HTTP response.
+
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| url | String | Yes | &nbsp; |
+
+**Returns**
+Void
+
+----
+### redirect
+Redirect the HTTP request to the given url.
+
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| req | Object | Yes | &nbsp; |
+| res | Object | Yes | &nbsp; |
+| url | String | Yes | &nbsp; |
+| status  | Number | No | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.redirect(req, res, '/')
+```
+
+----
+### vary
+Add vary header to the HTTP response.
+
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| field | String | Yes | &nbsp; |
+
+**Returns**
+Void
+
+----
+### type
+Set content type header by looking up the actual
+type and setting charset to utf8
+
+**Params**
+
+| Param | Type | Required | Description |
+|-----|-------|------|------|
+| res | Object | Yes | &nbsp; |
+| type | String | Yes | &nbsp; |
+| charset  | String | No | &nbsp; |
+
+**Returns**
+Void
+
+**Example**
+```js
+nodeRes.type(res, 'html')
+nodeRes.type(res, 'json')
+nodeRes.type(res, 'application/json')
+```
+
+----
+
+
+## Descriptive methods
 Node res also has support for descriptive methods, they set the status itself without calling the `status` method.
 
 ```javascript
@@ -182,19 +431,12 @@ nodeRes.unauthorized(req, res, 'You must login first') // will set 401 as status
 | gatewayTimeout | 504 |
 | httpVersionNotSupported | 505 |
 
-## License 
-(The MIT License)
 
-Copyright (c) 2015 Poppins
+[appveyor-image]: https://ci.appveyor.com/api/projects/status/github/poppinss/node-req?branch=master&svg=true&passingText=Passing%20On%20Windows
+[appveyor-url]: https://ci.appveyor.com/project/thetutlage/node-req
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+[npm-image]: https://img.shields.io/npm/v/node-req.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/node-req
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+[travis-image]: https://img.shields.io/travis/poppinss/node-req/master.svg?style=flat-square
+[travis-url]: https://travis-ci.org/poppinss/node-req
