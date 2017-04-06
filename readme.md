@@ -22,7 +22,7 @@
 ## See also
 
 1. [node-req](https://npmjs.org/package/node-req)
-2. [node-cookie](https://npmjs.org/package/node-res)
+2. [node-cookie](https://npmjs.org/package/node-cookie)
 
 ## Responding to requests.
 
@@ -432,11 +432,11 @@ nodeRes.unauthorized(req, res, 'You must login first') // will set 401 as status
 | httpVersionNotSupported | 505 |
 
 
-[appveyor-image]: https://ci.appveyor.com/api/projects/status/github/poppinss/node-req?branch=master&svg=true&passingText=Passing%20On%20Windows
-[appveyor-url]: https://ci.appveyor.com/project/thetutlage/node-req
+[appveyor-image]: https://ci.appveyor.com/api/projects/status/github/poppinss/node-res?branch=master&svg=true&passingText=Passing%20On%20Windows
+[appveyor-url]: https://ci.appveyor.com/project/thetutlage/node-res
 
-[npm-image]: https://img.shields.io/npm/v/node-req.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/node-req
+[npm-image]: https://img.shields.io/npm/v/node-res.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/node-res
 
-[travis-image]: https://img.shields.io/travis/poppinss/node-req/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/poppinss/node-req
+[travis-image]: https://img.shields.io/travis/poppinss/node-res/master.svg?style=flat-square
+[travis-url]: https://travis-ci.org/poppinss/node-res
