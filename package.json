@@ -1,27 +1,28 @@
 {
   "name": "node-res",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Nodejs http response builder",
   "main": "index.js",
   "scripts": {
     "lint": "standard",
     "pretest": "npm run lint",
     "posttest": "npm run coverage",
-    "test:local": "node --harmony-async-await ./node_modules/.bin/japa",
+    "test:local": "FORCE_COLOR=true node bin/index.js --local",
     "test": "./node_modules/.bin/nyc npm run test:local",
-    "test:win": "node --harmony-async-await ./node_modules/japa-cli/index.js",
+    "test:win": "set FORCE_COLOR=true && node bin/index.js --win",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "author": "amanvirk",
   "license": "MIT",
   "devDependencies": {
     "co-functional": "^0.2.1",
-    "coveralls": "^2.13.0",
+    "coveralls": "^2.13.1",
     "cz-conventional-changelog": "^2.0.0",
     "japa": "^1.0.3",
     "japa-cli": "^1.0.1",
-    "nyc": "^10.2.0",
-    "standard": "^10.0.0",
+    "nyc": "^11.0.2",
+    "semver": "^5.3.0",
+    "standard": "^10.0.2",
     "supertest": "^3.0.0"
   },
   "dependencies": {
@@ -29,7 +30,7 @@
     "content-type": "^1.0.2",
     "etag": "^1.8.0",
     "mime-types": "^2.1.15",
-    "send": "^0.15.1",
+    "send": "^0.15.3",
     "vary": "^1.1.1"
   },
   "directories": {
@@ -57,5 +58,10 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "nyc": {
+    "include": [
+      "src"
+    ]
   }
 }

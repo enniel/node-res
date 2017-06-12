@@ -228,6 +228,20 @@ Response.end = function (res) {
  * @param  {Mixed} body
  *
  * @return {void}
+ *
+ * @example
+ * ```js
+ * nodeRes.send(req, res, 'Hello world')
+ *
+ * // or html
+ * nodeRes.send(req, res, '<h2> Hello world </h2>')
+ *
+ * // or JSON
+ * nodeRes.send(req, res, { greeting: 'Hello world' })
+ *
+ * // or Buffer
+ * nodeRes.send(req, res, Buffer.from('Hello world', 'utf-8'))
+ * ```
  */
 Response.send = function (req, res, body) {
   if (body === null) {
