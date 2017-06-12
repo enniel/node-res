@@ -1,3 +1,8 @@
+<a name="3.0.2"></a>
+## [3.0.2](https://github.com/poppinss/node-res/compare/v3.0.1...v3.0.2) (2017-06-12)
+
+
+
 <a name="3.0.1"></a>
 ## [3.0.1](https://github.com/poppinss/node-res/compare/v2.0.1...v3.0.1) (2016-11-08)
 
