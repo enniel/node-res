@@ -2,22 +2,29 @@
 
 > A facade over Node.js HTTP `res` object with no side-effects.
 
-<br />
-
-<p align="center">
-  <a href="http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png">
-    <img src="http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png" width="600px" />
-  </a>
-</p>
-
-<br />
-
----
-
 [![NPM Version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
 [![Appveyor][appveyor-image]][appveyor-url]
+[![Coveralls][coveralls-image]][coveralls-url]
 
+<a href="http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png">
+<img src="http://i1117.photobucket.com/albums/k594/thetutlage/poppins-1_zpsg867sqyl.png" width="300px" align="right" vspace="20px" />
+</a>
+
+`node-res` is a simple module to make HTTP response in Node.js. In offers helpers to make it easier to set `headers`, define response statuses and properly parse response type to set appropriate headers.
+
+For example:
+
+```js
+// content-type: plain/text
+nodeRes.send(req, res, 'Hello world')
+
+// content-type: application/json
+nodeRes.send(req, res, { greeting: 'hello world' })
+    
+// content-type: text/html
+nodeRes.send(req, res, '<h2> Hello world </h2>')
+```
 
 ## See also
 
@@ -432,7 +439,8 @@ nodeRes.unauthorized(req, res, 'You must login first') // will set 401 as status
 | httpVersionNotSupported | 505 |
 
 
-[appveyor-image]: https://ci.appveyor.com/api/projects/status/github/poppinss/node-res?branch=master&svg=true&passingText=Passing%20On%20Windows
+[appveyor-image]: https://img.shields.io/appveyor/ci/thetutlage/node-res/master.svg?style=flat-square
+
 [appveyor-url]: https://ci.appveyor.com/project/thetutlage/node-res
 
 [npm-image]: https://img.shields.io/npm/v/node-res.svg?style=flat-square
@@ -440,3 +448,7 @@ nodeRes.unauthorized(req, res, 'You must login first') // will set 401 as status
 
 [travis-image]: https://img.shields.io/travis/poppinss/node-res/master.svg?style=flat-square
 [travis-url]: https://travis-ci.org/poppinss/node-res
+
+[coveralls-image]: https://img.shields.io/coveralls/poppinss/node-res/develop.svg?style=flat-square
+
+[coveralls-url]: https://coveralls.io/github/poppinss/node-res
