@@ -17,6 +17,8 @@ const send = require('send')
 const methods = require('./methods')
 
 const returnContentAndType = function (body) {
+  body = body || ''
+
   /**
    * Return the body and it's type when
    * body is a string.
